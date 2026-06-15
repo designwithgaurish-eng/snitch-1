@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Snitch — Path to Purchase Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --ink:#0E0E0E; --white:#fff; --grey:#8A8A82; --grey2:#B9B7B0;
+    --line:#ECECEA; --panel:#F5F4F2; --green:#1A7F37; --green-bg:#E8F3E8;
+    --accent:#E14434; --accent-soft:#FBE9E4; --pink:#E8407A;
+    --sg:'Space Grotesk',sans-serif; --in:'Inter',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    font-family:var(--in); background:#1b1b1d; color:var(--ink);
+    display:flex; align-items:center; justify-content:center; min-height:100vh;
+    padding:24px; overflow:hidden;
+  }
+  /* device */
+  .device{
+    width:402px; height:844px; max-height:96vh; background:var(--white);
+    border-radius:46px; position:relative; overflow:hidden;
+    box-shadow:0 40px 90px rgba(0,0,0,.55), 0 0 0 11px #111, 0 0 0 13px #2a2a2a;
+  }
+  @media (max-width:480px){
+    body{padding:0;}
+    .device{width:100vw; height:100vh; max-height:100vh; border-radius:0; box-shadow:none;}
+  }
+  .screen{position:absolute; inset:0; background:var(--white); overflow-y:auto; overflow-x:hidden; display:none; -webkit-overflow-scrolling:touch;}
+  .screen.active{display:block;}
+  .screen::-webkit-scrollbar{display:none;}
+
+  /* status bar */
+  .status{height:42px; display:flex; align-items:center; justify-content:space-between; padding:0 22px; font-size:13px; font-weight:600; flex:none; position:sticky; top:0; background:var(--white); z-index:20;}
+  .status .dots{display:flex; gap:5px; align-items:center; font-size:12px;}
+  .sig{display:inline-block;width:16px;height:11px;background:linear-gradient(90deg,var(--ink) 0 70%,#c9c9c4 70% 100%);-webkit-mask:repeating-linear-gradient(90deg,#000 0 2.5px,transparent 2.5px 4px);}
+  .batt{width:22px;height:11px;border:1.2px solid var(--ink);border-radius:3px;position:relative;}
+  .batt::before{content:"";position:absolute;inset:1.5px;background:var(--ink);border-radius:1px;}
+  .batt::after{content:"";position:absolute;right:-3px;top:3px;width:2px;height:5px;background:var(--ink);border-radius:0 1px 1px 0;}
+
+  /* generic */
+  .pad{padding:0 16px;}
+  .row{display:flex;align-items:center;justify-content:space-between;}
+  .hero{font-family:var(--sg);font-weight:700;}
+  .muted{color:var(--grey);}
+  .center{text-align:center;}
+  .tap{cursor:pointer;}
+  img{display:block;}
+
+  /* top bar with back + title */
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:8px 18px 14px;}
+  .topbar .ttl{font-family:var(--sg);font-weight:700;font-size:18px;}
+  .chev{font-size:24px;line-height:1;width:22px;}
+  .heart{font-size:19px;width:22px;text-align:right;}
+
+  /* PDP */
+  .pdp-img{width:100%;height:430px;object-fit:cover;object-position:top center;background:#d9d4d0;display:block;}
+  .pdp-imgwrap{position:relative;}
+  .pdp-actions{position:absolute;top:12px;right:14px;display:flex;gap:10px;z-index:5;}
+  .iconbtn{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.92);border:none;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.14);padding:0;cursor:pointer;}
+  .iconbtn img,.iconbtn svg{width:20px;height:20px;object-fit:contain;}
+  .rating{position:absolute;left:16px;bottom:14px;background:#fff;border-radius:8px;padding:5px 9px;font-size:13px;font-weight:600;display:flex;gap:5px;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,.12);}
+  .rating .star{color:var(--accent);}
+  .rating .ct{color:var(--grey);font-weight:500;}
+  .ptitle{font-size:17px;font-weight:500;margin:14px 0 8px;}
+  .price{display:flex;align-items:baseline;gap:8px;font-family:var(--sg);}
+  .price .now{font-size:20px;font-weight:700;}
+  .price .was{font-size:15px;color:var(--grey);text-decoration:line-through;font-weight:500;}
+  .price .off{font-size:13px;color:var(--green);font-weight:600;font-family:var(--in);}
+  .seclabel{display:flex;align-items:center;justify-content:space-between;margin:18px 0 12px;}
+  .seclabel .l{font-weight:600;font-size:15px;}
+  .seclabel .sc{font-size:13px;color:var(--grey);}
+  .finder-cta{display:flex;align-items:center;justify-content:space-between;background:var(--accent-soft);border-radius:10px;padding:9px 12px;margin-bottom:16px;}
+  .finder-cta .lft{display:flex;align-items:center;gap:9px;font-size:13px;}
+  .finder-cta .ruler{font-size:16px;}
+  .finder-cta .btn{background:#fff;border:1px solid var(--line);border-radius:7px;padding:5px 11px;font-size:12px;font-weight:600;}
+  .sizes{display:flex;gap:12px;}
+  .sizechip{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;}
+  .sizechip .box{width:100%;height:44px;border:1px solid #d7d7d2;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:15px;transition:.15s;}
+  .sizechip .stk{font-size:11px;color:var(--accent);font-weight:500;}
+  .sizechip.sel .box{border-color:var(--ink);background:var(--ink);color:#fff;}
+  .sizechip.reco .box{box-shadow:0 0 0 2px var(--green);}
+  .sizechip.rmd{position:relative;}
+  .sizechip.sold .box{color:var(--grey2);border-style:dashed;}
+  .sizechip.sold .box span{text-decoration:line-through;}
+  .sizechip .notify{color:var(--ink)!important;font-weight:700;line-height:1.15;}
+  .buyrow{display:flex;gap:14px;margin:18px 0 0;}
+  .btn-lg{flex:1;height:46px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:15px;border:1px solid var(--ink);background:#fff;color:var(--ink);}
+  .btn-lg.primary{background:var(--ink);color:#fff;border-color:var(--ink);}
+  .deliv{display:flex;align-items:center;justify-content:space-between;background:var(--panel);border-radius:9px;padding:10px 12px;margin-top:14px;font-size:12.5px;color:var(--grey);}
+  .deliv .chg{color:var(--accent);font-weight:600;}
+  .styling{background:#EFE9FB;margin-top:22px;padding:24px 16px 26px;border-radius:18px 18px 0 0;}
+  .styling h3{font-family:var(--sg);font-weight:700;text-align:center;font-size:22px;}
+  .styling p{text-align:center;font-size:14px;margin-top:4px;color:#3a3a3a;}
+  .stylegrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px;}
+  .stylegrid img{width:100%;border-radius:12px;}
+
+  /* drawer (size finder / notify) */
+  .scrim{position:absolute;inset:0;background:rgba(0,0,0,.42);z-index:90;opacity:0;visibility:hidden;transition:opacity .25s;}
+  .scrim.show{opacity:1;visibility:visible;}
+  .drawer{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:22px 22px 0 0;z-index:91;transform:translateY(100%);visibility:hidden;transition:transform .32s cubic-bezier(.22,1,.36,1),visibility .32s;max-height:92%;overflow-y:auto;box-shadow:0 -8px 40px rgba(0,0,0,.18);}
+  .drawer.up{transform:translateY(0);visibility:visible;}
+  .drawer .grip{width:39px;height:4px;background:#dcdcd6;border-radius:3px;margin:9px auto 4px;}
+  .drawer-hd{display:flex;align-items:center;gap:14px;padding:8px 18px 6px;}
+  .drawer-hd .x{font-size:18px;}
+  .drawer-hd .t{font-size:16px;font-weight:600;}
+  .drawer-body{padding:14px 18px 0;}
+  .drawer-q{font-size:18px;font-weight:600;line-height:1.3;margin-bottom:6px;}
+  .drawer-sub{font-size:13px;color:var(--grey);margin-bottom:14px;}
+  .opt{display:flex;align-items:center;gap:12px;padding:14px 4px;border-radius:8px;}
+  .opt.sel{background:var(--panel);}
+  .radio{width:20px;height:20px;border-radius:50%;border:1.6px solid #cfcfc9;flex:none;position:relative;}
+  .opt.sel .radio,.radio.on{border-color:var(--ink);}
+  .radio.on::after,.opt.sel .radio::after{content:"";position:absolute;inset:4px;border-radius:50%;background:var(--ink);}
+  .opt .label{font-size:15px;}
+  .note{font-size:12.5px;color:var(--grey);margin:8px 4px 0;line-height:1.5;}
+  .bodygrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:4px;}
+  .bodycard{border:1px solid var(--line);border-radius:12px;padding:12px 0 10px;display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;}
+  .bodycard.sel{border-color:var(--ink);border-width:1.5px;}
+  .bodycard img{height:96px;width:auto;}
+  .bodycard .nm{font-size:14px;}
+  .bodycard .ck{position:absolute;top:8px;right:8px;width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fff;font-size:11px;display:none;align-items:center;justify-content:center;}
+  .bodycard.sel .ck{display:flex;}
+  .hw{display:flex;gap:14px;margin-top:4px;}
+  .hw .fld{flex:1;}
+  .hw .fld .cap{font-size:13px;font-weight:500;margin-bottom:7px;}
+  .hw .fld .inp{border:1px solid var(--line);border-radius:9px;height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;font-size:15px;}
+  .hw .fld .inp .u{color:var(--grey);font-size:13px;}
+  .chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px;}
+  .chip{border:1px solid var(--line);border-radius:8px;padding:8px 14px;font-size:14px;}
+  .chip.sel{border-color:var(--ink);background:var(--ink);color:#fff;}
+  .sizecircles{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap;}
+  .scirc{width:45px;height:45px;border-radius:50%;border:1px solid #d7d7d2;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;}
+  .scirc.sel{border-color:var(--ink);border-width:1.5px;font-weight:700;}
+  .drawer-foot{display:flex;gap:12px;padding:16px 18px;margin-top:8px;border-top:1px solid var(--line);position:sticky;bottom:0;background:#fff;}
+  .dbtn{flex:1;height:46px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:15px;border:1px solid var(--ink);background:#fff;}
+  .dbtn.primary{background:var(--ink);color:#fff;}
+  .dbtn.full{flex:1;}
+  /* notify + result centered drawers */
+  .center-drawer{padding:8px 18px 0;text-align:center;}
+  .bell{margin:18px 0 6px;display:flex;justify-content:center;}
+  .bell img{width:60px;height:60px;object-fit:contain;}
+  .ruler-ic{width:18px;height:18px;object-fit:contain;}
+  .li-ic{width:15px;height:15px;object-fit:contain;vertical-align:middle;}
+  .deliv-line{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--grey);margin-top:8px;}
+  .bp-ic{width:20px;height:20px;object-fit:contain;}
+  .trash img{width:17px;height:17px;object-fit:contain;}
+  .reco-check{width:74px;height:74px;border-radius:50%;border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;font-size:34px;margin:14px auto 0;}
+  .reco-title{font-size:18px;font-weight:500;margin:18px 0 6px;line-height:1.4;}
+  .reco-title b{font-family:var(--sg);}
+  .reco-sub{font-size:13px;color:var(--grey);line-height:1.5;}
+
+  /* cart / checkout shared */
+  .recap-band{background:var(--panel);padding:11px 16px;display:flex;align-items:center;justify-content:space-between;font-size:12.5px;color:var(--grey);}
+  .recap-band .chg{color:var(--ink);font-weight:600;}
+  .citem{display:flex;gap:12px;padding:16px;}
+  .citem img{width:100px;height:120px;object-fit:cover;border-radius:8px;background:#ddd;flex:none;}
+  .citem.sm img{width:60px;height:74px;}
+  .citem .info{flex:1;min-width:0;}
+  .citem .nm{font-size:14px;font-weight:500;}
+  .pillrow{display:flex;gap:8px;margin-top:8px;}
+  .pill{border:1px solid var(--line);border-radius:7px;padding:4px 10px;font-size:12px;display:flex;align-items:center;gap:6px;color:#444;}
+  .cprice{display:flex;align-items:baseline;gap:8px;margin-top:10px;font-family:var(--sg);}
+  .cprice .now{font-weight:700;font-size:15px;}
+  .cprice .was{font-size:12px;color:var(--grey);text-decoration:line-through;}
+  .cprice .off{font-size:12px;color:var(--green);font-weight:600;font-family:var(--in);}
+  .deliv-line{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--grey);margin-top:8px;}
+  .trash{margin-left:auto;font-size:16px;color:#666;}
+  .bestprice{background:var(--accent-soft);margin:0 0 0 0;padding:12px 16px;display:flex;align-items:center;gap:10px;}
+  .bestprice .ic{font-size:20px;}
+  .bestprice .t{font-size:13px;font-weight:700;letter-spacing:.3px;}
+  .bestprice .s{font-size:12px;color:#555;}
+  .zig{height:14px;width:100%;background:
+     linear-gradient(135deg,#fff 50%,transparent 50%) 0 0/14px 14px repeat-x,
+     linear-gradient(-135deg,#fff 50%,transparent 50%) 0 0/14px 14px repeat-x;
+     background-color:#dfe7f5;}
+  .pricedetails{padding:18px 16px 0;}
+  .pricedetails h4{font-size:13px;font-weight:600;margin-bottom:12px;}
+  .pdrow{display:flex;justify-content:space-between;font-size:13px;margin-bottom:9px;color:var(--grey);}
+  .pdrow span:last-child{color:var(--ink);font-weight:500;}
+  .pdrow.green span:last-child{color:var(--green);}
+  .pdtotal{display:flex;justify-content:space-between;font-family:var(--sg);font-weight:700;font-size:16px;padding-top:11px;border-top:1px solid var(--line);margin-top:2px;}
+  .cheers{margin:16px 16px 0;background:var(--green-bg);border-radius:8px;padding:11px;text-align:center;font-size:13px;font-weight:600;}
+  .paybar{padding:14px 16px 8px;}
+  .paybtn{background:var(--ink);color:#fff;border-radius:11px;height:50px;display:flex;align-items:center;justify-content:center;gap:8px;font-family:var(--sg);font-weight:700;font-size:16px;}
+  .trustline{text-align:center;font-size:12px;color:var(--green);font-weight:600;padding:8px 0 16px;}
+  .lock{font-size:14px;}
+
+  /* checkout */
+  .topay{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--panel);}
+  .topay .l{font-family:var(--sg);}
+  .topay .l b{font-weight:700;}
+  .topay .vb{color:var(--ink);font-weight:600;font-size:13px;}
+  .seclbl{font-size:11px;font-weight:600;letter-spacing:1px;color:var(--grey);padding:18px 16px 10px;}
+  .method{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line);}
+  .method.card{margin:0 16px;border:1px solid var(--ink);border-radius:12px;border-bottom:1px solid var(--ink);padding:14px;}
+  .method.saved{margin:10px 16px 0;border:1px solid var(--line);border-radius:12px;border-bottom:1px solid var(--line);padding:13px 14px;}
+  .method .mi{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex:none;overflow:hidden;}
+  .method .mi img{width:30px;height:30px;object-fit:contain;}
+  .method .mi.generic{border:1px solid var(--line);font-size:15px;}
+  .method .mtxt{flex:1;min-width:0;}
+  .method .mtxt .mn{font-size:14px;font-weight:500;}
+  .method .mtxt .ms{font-size:12px;color:var(--grey);margin-top:2px;}
+  .method .arr{color:var(--grey);font-size:16px;}
+
+  /* states */
+  .state-wrap{display:flex;flex-direction:column;height:100%;min-height:760px;}
+  .state-center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 34px;gap:14px;}
+  .state-center h2{font-family:var(--sg);font-weight:700;font-size:24px;}
+  .state-center p{font-size:13.5px;color:var(--grey);line-height:1.5;}
+  .state-center .amt{font-size:13px;font-weight:500;color:var(--ink);}
+  .spinner{width:66px;height:66px;border-radius:50%;border:4px solid var(--line);border-top-color:var(--ink);animation:spin 1s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .circle-icon{width:76px;height:76px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:700;}
+  .circle-icon.ok{background:#D9F2E0;color:var(--green);border:2px solid #46B36A;}
+  .circle-icon.err{background:#FBE0DD;color:var(--accent);border:2px solid #E07A6A;}
+  .state-center p.notcharged{color:var(--ink);font-weight:700;font-size:16px;}
+  .state-foot{padding:0 16px 22px;display:flex;flex-direction:column;gap:10px;}
+  .state-foot .sb{height:48px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-family:var(--sg);font-weight:700;font-size:15px;border:1px solid var(--ink);background:#fff;}
+  .state-foot .sb.primary{background:var(--ink);color:#fff;}
+  .state-foot .lnk{text-align:center;font-size:13px;font-weight:600;padding:4px;color:var(--grey);}
+  .proc-disabled{background:var(--panel)!important;color:var(--grey)!important;}
+
+  /* restart fab */
+  .fab{position:fixed;right:18px;bottom:18px;background:#000;color:#fff;border:1px solid #333;border-radius:30px;padding:10px 16px;font-size:12px;font-family:var(--in);font-weight:600;z-index:200;cursor:pointer;opacity:.85;}
+  .fab:hover{opacity:1;}
+  @media (max-width:480px){.fab{bottom:10px;right:10px;}}
+</style>
+</head>
+<body>
+<div class="device">
+
+  <!-- ================= PDP ================= -->
+  <section class="screen active" id="pdp">
+    <div class="status"><span>9:41</span><span class="dots"><span class="sig"></span><span class="batt"></span></span></div>
+    <div class="pdp-imgwrap">
+      <img class="pdp-img" src="images/jersey.png" alt="GRIND PWR Jersey T-Shirt" />
+      <div class="pdp-actions">
+        <button class="iconbtn tap" aria-label="Wishlist"><svg viewBox="0 0 24 24" fill="none" stroke="#0E0E0E" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5C12 20.5 3.5 15 3.5 8.8C3.5 6.2 5.6 4.2 8.1 4.2C9.7 4.2 11.1 5 12 6.3C12.9 5 14.3 4.2 15.9 4.2C18.4 4.2 20.5 6.2 20.5 8.8C20.5 15 12 20.5 12 20.5Z"/></svg></button>
+        <button class="iconbtn tap" aria-label="Cart" onclick="goCart()"><img src="images/ic-bag.svg" alt="Cart"></button>
+      </div>
+      <div class="rating"><span class="star">★</span>4.3 <span class="ct">| 120</span></div>
+    </div>
+    <div class="pad">
+      <div class="ptitle">GRIND PWR Jersey T-Shirt</div>
+      <div class="price"><span class="now">₹1359</span><span class="was">₹1500</span><span class="off">9% Off</span></div>
+
+      <div class="seclabel"><span class="l">Select Size</span><span class="sc">Size Chart →</span></div>
+
+      <div class="finder-cta tap" onclick="openFinder()">
+        <div class="lft"><img class="ruler-ic" src="images/ic-ruler.png" alt=""><span>Not sure which size to buy?</span></div>
+        <div class="btn">Try size finder</div>
+      </div>
+
+      <div class="sizes" id="pdpSizes">
+        <div class="sizechip tap" data-size="S" onclick="pickSize(this)"><div class="box">S</div><div class="stk">4 left</div></div>
+        <div class="sizechip tap" data-size="M" onclick="pickSize(this)"><div class="box">M</div><div class="stk">&nbsp;</div></div>
+        <div class="sizechip tap" data-size="L" onclick="pickSize(this)"><div class="box">L</div><div class="stk">2 left</div></div>
+        <div class="sizechip sold tap" data-size="XL" onclick="openNotify()"><div class="box"><span>XL</span></div><div class="stk notify">Notify Me!</div></div>
+        <div class="sizechip tap" data-size="XXL" onclick="pickSize(this)"><div class="box">XXL</div><div class="stk">2 left</div></div>
+      </div>
+
+      <div class="buyrow">
+        <div class="btn-lg tap" onclick="goCart()">Buy Now</div>
+        <div class="btn-lg primary tap" onclick="goCart()">Add to Bag</div>
+      </div>
+
+      <div class="deliv"><span>Enjoy FREE 3 day delivery on 110015</span><span class="chg">Change</span></div>
+    </div>
+
+    <div class="styling">
+      <h3>Styling Ideas</h3>
+      <p>One Jersey. Many Vibes</p>
+      <div class="stylegrid">
+        <img src="images/style-1.png" alt="Street Ready" />
+        <img src="images/style-2.png" alt="Casual Explorer" />
+        <img src="images/style-3.png" alt="City Escape" />
+        <img src="images/style-4.png" alt="Smart Edge" />
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CART ================= -->
+  <section class="screen" id="cart">
+    <div class="status"><span>9:41</span><span class="dots"><span class="sig"></span><span class="batt"></span></span></div>
+    <div class="topbar"><span class="chev tap" onclick="show('pdp')">‹</span><span class="ttl">Your Bag</span><span class="heart">♡</span></div>
+    <div class="recap-band"><span>Delivering to Gaurish · 110015</span><span class="chg">Change</span></div>
+
+    <div class="citem">
+      <img src="images/jersey.png" alt="" />
+      <div class="info">
+        <div class="nm">GRIND PWR Jersey T-Shirt</div>
+        <div class="pillrow">
+          <span class="pill">Size <b>XL</b> ▾</span>
+          <span class="pill">Qty <b>1</b> ▾</span>
+        </div>
+        <div class="cprice"><span class="now">₹1359</span><span class="was">₹1500</span><span class="off">9% OFF</span></div>
+        <div class="deliv-line"><img class="li-ic" src="images/ic-truck.png" alt="">Delivery by Jun 15, 2026</div>
+      </div>
+      <div class="trash"><img class="li-ic" src="images/ic-trash.png" alt="Remove"></div>
+    </div>
+
+    <div class="bestprice">
+      <span class="ic"><img class="bp-ic" src="images/ic-discount.png" alt=""></span>
+      <div><div class="t">BEST PRICE APPLIED</div><div class="s">You saved ₹141 automatically</div></div>
+    </div>
+
+    <div class="zig"></div>
+
+    <div class="pricedetails">
+      <h4>Price details</h4>
+      <div class="pdrow"><span>Bag total</span><span>₹1500</span></div>
+      <div class="pdrow green"><span>Discount</span><span>−₹141</span></div>
+      <div class="pdrow green"><span>Delivery</span><span>Free</span></div>
+      <div class="pdtotal"><span>Grand total</span><span>₹1359</span></div>
+    </div>
+
+    <div class="cheers">🎉 Cheers! You saved ₹141.00</div>
+
+    <div class="paybar">
+      <div class="paybtn tap" onclick="show('checkout')"><span class="lock">🔒</span> Pay ₹1359</div>
+    </div>
+    <div class="trustline">100% secure payment | Easy 7-day returns</div>
+  </section>
+
+  <!-- ================= CHECKOUT ================= -->
+  <section class="screen" id="checkout">
+    <div class="status"><span>9:41</span><span class="dots"><span class="sig"></span><span class="batt"></span></span></div>
+    <div class="topbar"><span class="chev tap" onclick="show('cart')">‹</span><span class="ttl">Checkout</span><span class="heart">&nbsp;</span></div>
+    <div class="topay"><span class="l">To Pay · <b>₹1359</b></span><span class="vb">View bill</span></div>
+
+    <div class="citem sm">
+      <img src="images/jersey.png" alt="" />
+      <div class="info">
+        <div class="nm">GRIND PWR Jersey T-Shirt</div>
+        <div class="deliv-line" style="margin-top:6px;color:#444">Size <b>XL</b> &nbsp;|&nbsp; Qty <b>1</b></div>
+        <div class="deliv-line"><img class="li-ic" src="images/ic-truck.png" alt="">Delivery by Jun 15, 2026</div>
+      </div>
+    </div>
+
+    <div class="recap-band"><span>Delivering to Gaurish · 110015</span><span class="chg">Change</span></div>
+
+    <div class="seclbl">RECOMMENDED</div>
+    <div class="method card">
+      <span class="radio on"></span>
+      <span class="mi"><img src="images/gpay.png" alt="GPay"></span>
+      <div class="mtxt"><div class="mn">UPI · Google Pay</div></div>
+    </div>
+    <div class="method saved">
+      <span class="radio"></span>
+      <span class="mi"><img src="images/paytm.png" alt="Paytm"></span>
+      <div class="mtxt"><div class="mn">Paytm UPI</div><div class="ms">kabir@okhdfc · last used</div></div>
+      <span class="arr">›</span>
+    </div>
+
+    <div class="seclbl">OTHER WAYS TO PAY</div>
+    <div class="method"><span class="radio"></span><span class="mi"><img src="images/ic-card.png" alt=""></span><div class="mtxt"><div class="mn">Credit / debit card</div></div><span class="arr">›</span></div>
+    <div class="method"><span class="radio"></span><span class="mi"><img src="images/ic-cash.png" alt=""></span><div class="mtxt"><div class="mn">Cash on delivery</div></div><span class="arr">›</span></div>
+    <div class="method"><span class="radio"></span><span class="mi"><img src="images/ic-bank.png" alt=""></span><div class="mtxt"><div class="mn">Net Banking</div></div><span class="arr">›</span></div>
+
+    <div class="paybar" style="margin-top:8px">
+      <div class="paybtn tap" onclick="startPayment()"><span class="lock">🔒</span> Pay ₹1359</div>
+    </div>
+    <div class="trustline">100% secure payment | Easy 7-day returns</div>
+  </section>
+
+  <!-- ================= PROCESSING ================= -->
+  <section class="screen" id="processing">
+    <div class="status"><span>9:41</span><span class="dots"><span class="sig"></span><span class="batt"></span></span></div>
+    <div class="topbar"><span class="chev">&nbsp;</span><span class="ttl">Checkout</span><span class="heart">&nbsp;</span></div>
+    <div class="state-wrap">
+      <div class="state-center">
+        <div class="spinner"></div>
+        <h2>Confirming your payment</h2>
+        <p>Please don't close or go back — we'll never charge you twice.</p>
+        <div class="amt">₹1359 · UPI · Google Pay</div>
+      </div>
+      <div class="state-foot">
+        <div class="sb proc-disabled">Processing…</div>
+        <div class="lnk tap" onclick="show('failed')">(demo: simulate a failed payment)</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SUCCESS ================= -->
+  <section class="screen" id="success">
+    <div class="status"><span>9:41</span><span class="dots"><span class="sig"></span><span class="batt"></span></span></div>
+    <div class="topbar"><span class="chev">&nbsp;</span><span class="ttl">Checkout</span><span class="heart">&nbsp;</span></div>
+    <div class="state-wrap">
+      <div class="state-center">
+        <div class="circle-icon ok">✓</div>
+        <h2>Payment successful</h2>
+        <p>Order #SNTCH-4821 confirmed</p>
+        <div class="amt">₹1359 paid · Arriving in 2 days</div>
+      </div>
+      <div class="state-foot">
+        <div class="sb primary tap" onclick="restart()">View Order</div>
+        <div class="sb tap" onclick="restart()">Continue Shopping</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FAILED ================= -->
+  <section class="screen" id="failed">
+    <div class="status"><span>9:41</span><span class="dots"><span class="sig"></span><span class="batt"></span></span></div>
+    <div class="topbar"><span class="chev">&nbsp;</span><span class="ttl">Checkout</span><span class="heart">&nbsp;</span></div>
+    <div class="state-wrap">
+      <div class="state-center">
+        <div class="circle-icon err">✕</div>
+        <h2>Payment didn't go through</h2>
+        <p class="notcharged">You have NOT been charged.</p>
+        <p>Your bag is saved. Try again when you're ready — no duplicate orders.</p>
+      </div>
+      <div class="state-foot">
+        <div class="sb primary tap" onclick="show('checkout')">Try Again</div>
+        <div class="sb tap" onclick="show('checkout')">Choose Another Method</div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- bottom-sheet drawers (pinned to device) -->
+<!-- size finder scrim + drawer -->
+    <div class="scrim" id="finderScrim" onclick="closeFinder()"></div>
+    <div class="drawer" id="finderDrawer">
+      <div class="grip"></div>
+
+      <!-- STEP 1 -->
+      <div class="finder-step" data-step="1">
+        <div class="drawer-hd"><span class="x tap" onclick="closeFinder()">✕</span><span class="t">Find Size for Upperwear</span></div>
+        <div class="drawer-body">
+          <div class="drawer-q">What type of Upperwear do you prefer wearing more often?</div>
+          <div class="opt tap" onclick="selOpt(this)"><span class="radio"></span><span class="label">T-shirts</span></div>
+          <div class="opt sel tap" onclick="selOpt(this)"><span class="radio"></span><span class="label">Shirts</span></div>
+          <div class="note">Note: We'll recommend the right size for upperwear based on the option you select above.</div>
+        </div>
+        <div class="drawer-foot"><div class="dbtn primary full tap" onclick="finderStep(2)">Find My Size</div></div>
+      </div>
+
+      <!-- STEP 2 body type -->
+      <div class="finder-step" data-step="2" style="display:none">
+        <div class="drawer-hd"><span class="x tap" onclick="closeFinder()">✕</span><span class="t">Find Size for Upperwear</span></div>
+        <div class="drawer-body">
+          <div class="drawer-q">What is your body type?</div>
+          <div class="drawer-sub">Pick the silhouette that looks closest to you so we can fine-tune your fit.</div>
+          <div class="bodygrid">
+            <div class="bodycard tap" onclick="selBody(this)"><img src="images/body-1.png" alt=""><div class="nm">Slim / Lean</div><div class="ck">✓</div></div>
+            <div class="bodycard sel tap" onclick="selBody(this)"><img src="images/body-2.png" alt=""><div class="nm">Athletic</div><div class="ck">✓</div></div>
+            <div class="bodycard tap" onclick="selBody(this)"><img src="images/body-3.png" alt=""><div class="nm">Average</div><div class="ck">✓</div></div>
+            <div class="bodycard tap" onclick="selBody(this)"><img src="images/body-4.png" alt=""><div class="nm">Broad</div><div class="ck">✓</div></div>
+          </div>
+        </div>
+        <div class="drawer-foot"><div class="dbtn tap" onclick="finderStep(1)">Back</div><div class="dbtn primary tap" onclick="finderStep(3)">Next</div></div>
+      </div>
+
+      <!-- STEP 3 height weight -->
+      <div class="finder-step" data-step="3" style="display:none">
+        <div class="drawer-hd"><span class="x tap" onclick="closeFinder()">✕</span><span class="t">Find Size for Upperwear</span></div>
+        <div class="drawer-body">
+          <div class="drawer-q">Tell us your height and weight</div>
+          <div class="hw">
+            <div class="fld"><div class="cap">Height</div><div class="inp"><span>5.7</span><span class="u">ft</span></div></div>
+            <div class="fld"><div class="cap">Weight</div><div class="inp"><span>73</span><span class="u">Kgs</span></div></div>
+          </div>
+        </div>
+        <div class="drawer-foot"><div class="dbtn tap" onclick="finderStep(2)">Back</div><div class="dbtn primary tap" onclick="finderStep(4)">Next</div></div>
+      </div>
+
+      <!-- STEP 4 fit + size -->
+      <div class="finder-step" data-step="4" style="display:none">
+        <div class="drawer-hd"><span class="x tap" onclick="closeFinder()">✕</span><span class="t">Find Size for Upperwear</span></div>
+        <div class="drawer-body">
+          <div class="drawer-q">What fit do you wear the most?</div>
+          <div class="chips" id="fitChips">
+            <div class="chip sel tap" onclick="selChip(this,'fit')">✓ Slim</div>
+            <div class="chip tap" onclick="selChip(this,'fit')">Regular</div>
+            <div class="chip tap" onclick="selChip(this,'fit')">Relaxed</div>
+            <div class="chip tap" onclick="selChip(this,'fit')">Oversized</div>
+          </div>
+          <div class="drawer-q" style="margin-top:22px;font-size:16px">What size of Shirts fit you best?</div>
+          <div class="sizecircles" id="finderSizes">
+            <div class="scirc tap" onclick="selChip(this,'sz')">S</div>
+            <div class="scirc sel tap" onclick="selChip(this,'sz')">M</div>
+            <div class="scirc tap" onclick="selChip(this,'sz')">L</div>
+            <div class="scirc tap" onclick="selChip(this,'sz')">XL</div>
+            <div class="scirc tap" onclick="selChip(this,'sz')">XXL</div>
+          </div>
+        </div>
+        <div class="drawer-foot"><div class="dbtn tap" onclick="finderStep(3)">Back</div><div class="dbtn primary tap" onclick="finderStep(5)">Next</div></div>
+      </div>
+
+      <!-- STEP 5 result -->
+      <div class="finder-step" data-step="5" style="display:none">
+        <div class="drawer-hd"><span class="x tap" onclick="finishFinder()">✕</span><span class="t">Find Size for Upperwear</span></div>
+        <div class="center-drawer">
+          <div class="reco-check">✓</div>
+          <div class="reco-title">Your recommended size for this article is : <b>M</b></div>
+          <div class="reco-sub">You'll now see the recommended sizes for every upperwear that you purchase.</div>
+        </div>
+        <div class="drawer-foot"><div class="dbtn primary full tap" onclick="finishFinder()">Done</div></div>
+      </div>
+    </div>
+
+    <!-- notify scrim + drawer -->
+    <div class="scrim" id="notifyScrim" onclick="closeNotify()"></div>
+    <div class="drawer" id="notifyDrawer">
+      <div class="grip"></div>
+      <div class="drawer-hd"><span class="x tap" onclick="closeNotify()">✕</span><span class="t">Notify me</span></div>
+      <div class="center-drawer">
+        <div class="bell"><img src="images/ic-bell.png" alt=""></div>
+        <div class="reco-title">We'll text you when <b>XL</b> size is back.</div>
+      </div>
+      <div class="drawer-foot"><div class="dbtn primary full tap" onclick="closeNotify()">Done</div></div>
+    </div>
+
+  </div>
+
+<div class="fab" onclick="restart()">↺ Restart</div>
+
+<script>
+  function show(id){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    var el=document.getElementById(id);
+    el.classList.add('active');
+    el.scrollTop=0;
+  }
+  function restart(){ closeFinder(); closeNotify(); show('pdp'); }
+
+  /* ---- PDP size selection ---- */
+  function pickSize(elm){
+    document.querySelectorAll('#pdpSizes .sizechip').forEach(c=>c.classList.remove('sel'));
+    elm.classList.add('sel');
+  }
+
+  /* ---- Size finder ---- */
+  function openFinder(){
+    setFinderStep(1);
+    document.getElementById('finderScrim').classList.add('show');
+    requestAnimationFrame(()=>document.getElementById('finderDrawer').classList.add('up'));
+  }
+  function closeFinder(){
+    document.getElementById('finderDrawer').classList.remove('up');
+    document.getElementById('finderScrim').classList.remove('show');
+  }
+  function setFinderStep(n){
+    document.querySelectorAll('#finderDrawer .finder-step').forEach(s=>{
+      s.style.display = (s.getAttribute('data-step')==String(n))?'block':'none';
+    });
+    document.getElementById('finderDrawer').scrollTop=0;
+  }
+  function finderStep(n){ setFinderStep(n); }
+  function finishFinder(){
+    closeFinder();
+    // mark M as recommended on the PDP and select it
+    document.querySelectorAll('#pdpSizes .sizechip').forEach(c=>{
+      c.classList.remove('sel','reco');
+      if(c.getAttribute('data-size')=='M'){
+        c.classList.add('sel','reco');
+        var stk=c.querySelector('.stk'); if(stk) stk.textContent='Recommended';
+      }
+    });
+  }
+  function selOpt(elm){
+    elm.parentNode.querySelectorAll('.opt').forEach(o=>o.classList.remove('sel'));
+    elm.classList.add('sel');
+  }
+  function selBody(elm){
+    elm.parentNode.querySelectorAll('.bodycard').forEach(o=>o.classList.remove('sel'));
+    elm.classList.add('sel');
+  }
+  function selChip(elm,grp){
+    var cont = grp=='fit'? document.getElementById('fitChips') : document.getElementById('finderSizes');
+    cont.querySelectorAll(grp=='fit'?'.chip':'.scirc').forEach(c=>{
+      c.classList.remove('sel');
+      c.textContent = c.textContent.replace('✓ ','');
+    });
+    elm.classList.add('sel');
+    if(grp=='fit') elm.textContent='✓ '+elm.textContent;
+  }
+
+  /* ---- Notify ---- */
+  function openNotify(){
+    document.getElementById('notifyScrim').classList.add('show');
+    requestAnimationFrame(()=>document.getElementById('notifyDrawer').classList.add('up'));
+  }
+  function closeNotify(){
+    document.getElementById('notifyDrawer').classList.remove('up');
+    document.getElementById('notifyScrim').classList.remove('show');
+  }
+
+  /* ---- flow ---- */
+  function goCart(){ show('cart'); }
+  function startPayment(){
+    show('processing');
+    clearTimeout(window._payT);
+    window._payT = setTimeout(function(){
+      // only advance if still on processing (user may have tapped the failed-demo link)
+      if(document.getElementById('processing').classList.contains('active')) show('success');
+    }, 2400);
+  }
+</script>
+</body>
+</html>
